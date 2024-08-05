@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-backend2
+  namespace: java
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: java-backend
+  template:
+    metadata:
+      labels:
+        app: java-backend
+    spec:
+      containers:
+      - name: java-backend
+        image: ketan32/backend2
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_HOST
+          value: mysql-service
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_USER
+          value: admin
+        - name: DB_PASSWORD
+          value: admin
+        - name: DB_NAME
+          value: nimai_phase2
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        volumeMounts:
+        - name: logs
+          mountPath: /app/logs
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "200Mi"
+          limits:
+            cpu: "500m"
+            memory: "500Mi"
+      volumes:
+      - name: logs
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: java-backend-service2
+  namespace: java
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+        #      nodePort: 31000
+  selector:
+    app: java-backend
+

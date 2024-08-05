@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: load-test
+spec:
+  containers:
+  - name: python
+    image: python:latest
+    command: ["python", "-c", "import requests; import time; url='http://134.209.157.252:31239/'; while True: print(requests.get(url).status_code); time.sleep(1)"]
+

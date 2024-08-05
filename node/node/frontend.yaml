@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: angular-app
+  namespace: node
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: angular-app
+  template:
+    metadata:
+      labels:
+        app: angular-app
+    spec:
+      containers:
+        - name: angular-app
+          image: ketan32/angular-frontend  # Replace with your NGINX image and tag
+          ports:
+            - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: angular-nodeport-service
+  namespace: node
+spec:
+  selector:
+    app: angular-app  # This should match the label selector in your Deployment
+  ports:
+    - protocol: TCP
+      port: 80  # Port on the Service
+      targetPort: 80  # Port your NGINX container is listening on
+#      nodePort: 30000  # Port to access the service from outside the cluster (adjust as needed)
+  type: NodePort  # Expose the Service on each Node's IP at a static port
+
+

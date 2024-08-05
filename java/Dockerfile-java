@@ -1,0 +1,21 @@
+FROM ubuntu:22.04
+
+# Update the package list and install necessary packages including openjdk-17-jdk
+RUN apt-get update && apt-get install -y \
+    openjdk-17-jdk \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables for Tomcat
+ENV TOMCAT_HOME=/usr/local/tomcat
+
+# Copy the Tomcat installation from your local machine to the Docker image
+COPY tomcat ${TOMCAT_HOME}
+
+# Copy the WAR file to the Tomcat webapps directory
+COPY testdemo.war ${TOMCAT_HOME}/webapps/
+
+# Expose port 8080 for Tomcat
+EXPOSE 8080
+
+# Start Tomcat server using shutdown.sh and startup.sh
+CMD ["sh", "-c", "${TOMCAT_HOME}/bin/shutdown.sh && ${TOMCAT_HOME}/bin/startup.sh && tail -f ${TOMCAT_HOME}/logs/catalina.out

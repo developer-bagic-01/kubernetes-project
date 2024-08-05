@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: metricbeat
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: metricbeat
+  template:
+    metadata:
+      labels:
+        app: metricbeat
+    spec:
+      serviceAccountName: metricbeat
+      containers:
+      - name: metricbeat
+        image: docker.elastic.co/beats/metricbeat:8.4.0
+        args: [
+          "-e",
+          "-system.hostfs=/hostfs",
+          "-path.config=/usr/share/metricbeat/config",
+          "-path.data=/usr/share/metricbeat/data",
+          "-path.logs=/usr/share/metricbeat/logs"
+        ]
+        volumeMounts:
+        - name: metricbeat-config
+          mountPath: /usr/share/metricbeat/config
+        - name: host-root
+          mountPath: /hostfs
+        - name: metricbeat-data
+          mountPath: /usr/share/metricbeat/data
+        - name: metricbeat-logs
+          mountPath: /usr/share/metricbeat/logs
+      volumes:
+      - name: metricbeat-config
+        configMap:
+          name: metricbeat-config
+      - name: host-root
+        hostPath:
+          path: /
+      - name: metricbeat-data
+        emptyDir: {}
+      - name: metricbeat-logs
+        emptyDir: {}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metricbeat-config
+  namespace: kube-system
+data:
+  metricbeat.yml: |
+    metricbeat.config.modules:
+      path: ${path.config}/modules.d/*.yml
+      reload.enabled: false
+    setup.kibana:
+      host: "http://kibana:5601"
+    output.elasticsearch:
+      hosts: ["http://elasticsearch:9200"]
+    processors:
+      - add_cloud_metadata: ~
+      - add_host_metadata: ~
+    modules:
+      - module: kubernetes
+        metricsets:
+          - node
+          - pod
+          - container
+          - volume
+        period: 10s
+        hosts: ["http://kubelet:10255"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: metricbeat
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: metricbeat
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "pods", "namespaces", "nodes/stats", "pods/stats"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: metricbeat
+subjects:
+  - kind: ServiceAccount
+    name: metricbeat
+    namespace: kube-system
+roleRef:
+  kind: ClusterRole
+  name: metricbeat
+  apiGroup: rbac.authorization.k8s.io
+

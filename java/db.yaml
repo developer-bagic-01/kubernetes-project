@@ -1,0 +1,107 @@
+# mysql-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+  namespace: java
+type: Opaque
+data:
+  MYSQL_ROOT_PASSWORD: YWRtaW4= # base64 encoded 'admin'
+
+---
+
+# mysql-pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv
+  namespace: java
+spec:
+  capacity:
+    storage: 1Gi  # Adjust storage size as per your requirement
+  accessModes:
+    - ReadWriteOnce  # Access mode for the volume
+  persistentVolumeReclaimPolicy: Retain  # Retain policy ensures data is not deleted
+  hostPath:
+    path: "/mnt/data/mysql"  # Replace with your host path
+
+---
+
+# mysql-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: java
+  
+spec:
+  accessModes:
+    - ReadWriteOnce  # Access mode should match PV
+  resources:
+    requests:
+      storage: 1Gi  # Storage size should match PV
+
+---
+
+# mysql.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+  namespace: java
+spec:
+  selector:
+    app: mysql
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-java-deploy
+  namespace: java
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_ROOT_PASSWORD
+            - name: MYSQL_DATABASE
+              value: nimai_phase2
+            - name: MYSQL_USER
+              value: admin
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_ROOT_PASSWORD
+          ports:
+            - containerPort: 3306
+              name: mysql-port
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-persistent-storage
+          persistentVolumeClaim:
+            claimName: mysql-pvc  # Reference the PVC created
+
+
+

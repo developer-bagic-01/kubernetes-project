@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: load-test
+spec:
+  containers:
+  - name: python
+    image: python:latest
+    command: [ "python", "/scripts/load_test.py" ]
+    volumeMounts:
+    - name: script-volume
+      mountPath: /scripts
+  volumes:
+  - name: script-volume
+    configMap:
+      name: load-test-script
+

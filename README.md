@@ -34,3 +34,11 @@ logging.pattern.file=%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %m
 # Configure the logging pattern for the console
 logging.pattern.console=%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
 
+```shell
+#!/bin/bash
+
+# This is a sample shell script
+echo "Hello, World!"
+
+```bash
+

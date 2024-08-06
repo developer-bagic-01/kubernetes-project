@@ -43,3 +43,17 @@ echo "Hello, World!"
 
 this is new lines
 ```
+
+
+### Explanation
+
+1. **Header (`# Sample Shell Script`):**
+   This is an optional section header. You can use it to provide context or a title for the script.
+
+2. **Code Block:**
+   - Start with triple backticks (\`\`\`).
+   - Specify `shell` for syntax highlighting.
+   - Paste your shell script code between the backticks.
+   - End with triple backticks.
+
+### Full Example
